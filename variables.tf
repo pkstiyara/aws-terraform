@@ -14,16 +14,6 @@ variable "subnet_names" {
     }
 }
 
-variable "new_value" {
-
-}
-
-
-variable "map_var" {
-    type = map
-  
-}
-
 // Output variables
 
 output "first_output" {
