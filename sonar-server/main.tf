@@ -2,7 +2,7 @@
 # Security Group
 
 resource "aws_security_group" "node" {
-  name        = "node"
+  name        = "jenkins"
   description = "Allow SSH and HTTP traffic"
 
   ingress {
@@ -19,29 +19,13 @@ resource "aws_security_group" "node" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-   ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = {
-    "Name" = "node-security-group"
-  }
+  tags = var.sg_name
 }
 
 
@@ -53,18 +37,35 @@ resource "aws_instance" "node" {
   instance_type   = "t2.micro"
   key_name        = "sonar"
   security_groups = [aws_security_group.node.name]
-  count           = "1"
   user_data       = <<EOF
 #!/bin/bash
 
 # Update package index
 sudo apt-get update
 
+# Install Java 11
+sudo apt-get install -y openjdk-11-jdk
+
+# Add Jenkins package repository
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+
+# Install Jenkins LTS
+sudo apt-get install -y jenkins
+
+# Start Jenkins service
+sudo systemctl start jenkins
+
+# Enable Jenkins service to start on boot
+sudo systemctl enable jenkins
+
+# Check the status of Jenkins service
+sudo systemctl status jenkins
 EOF
 
-  tags = {
-    "Name" = "eks-controller"
-  }
+  tags = var.instance_name
+
 }
 
 

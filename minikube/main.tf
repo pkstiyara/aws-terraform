@@ -1,7 +1,7 @@
 
 # Security Group
 
-resource "aws_security_group" "jenkins" {
+resource "aws_security_group" "node" {
   name        = "jenkins"
   description = "Allow SSH and HTTP traffic"
 
@@ -25,20 +25,18 @@ resource "aws_security_group" "jenkins" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = {
-    "Name" = "jenkins-security-group"
-  }
+  tags = var.sg_name
 }
 
 
 
 # Instance 
 
-resource "aws_instance" "jenkins" {
+resource "aws_instance" "node" {
   ami             = data.aws_ami.ubuntu.image_id
-  instance_type   = "t2.medium"
-  key_name        = "jenkins-server-key"
-  security_groups = [aws_security_group.jenkins.name]
+  instance_type   = "t2.micro"
+  key_name        = "sonar"
+  security_groups = [aws_security_group.node.name]
   user_data       = <<EOF
 #!/bin/bash
 
@@ -66,9 +64,8 @@ sudo systemctl enable jenkins
 sudo systemctl status jenkins
 EOF
 
-  tags = {
-    "Name" = "Jenkins-Server"
-  }
+  tags = var.instance_name
+
 }
 
 
